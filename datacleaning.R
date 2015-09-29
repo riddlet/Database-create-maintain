@@ -203,4 +203,15 @@ getannotations <- function(parentdir) {
 
 d <- '../Data/annotation_tool/My Files/'
 
-getannotations(d)
+ess.file <- getannotations(d)
+ess.first <- ess.file[which(str_detect(ess.file, '^[0-9]'))]
+file.comp <- str_split(ess.first, pattern = '_')
+file.comp <- file.comp[-1]
+ess.first <- ess.first[-1]
+filedetails <- data.frame(filename=ess.first,
+                        id=unlist(lapply(file.comp, '[[', 1)),
+                        cond=unlist(lapply(file.comp, '[[', 2)),
+                        date=unlist(lapply(file.comp, '[[', 3)),
+                        int=unlist(lapply(file.comp, '[[', 4))
+                         
+           
