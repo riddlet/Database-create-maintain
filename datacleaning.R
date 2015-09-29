@@ -188,3 +188,19 @@ prompts <- data.frame(Intervention_number=c(as.character(prompts.schools$Interve
                       Cohort=c(prompts.schools$Cohort, prompts.other$Cohort))
 
 write.csv(prompts, 'prompts9.29.11.csv')
+
+######## Appending annotated essays
+
+getannotations <- function(parentdir) {
+  dirlist <- list.files(parentdir, pattern='lirsm*')
+  essays <- ''
+  for(i in dirlist){
+    esslist <- list.files(paste(parentdir, i, sep='/'), pattern='.*.txt')
+    essays <- c(essays, esslist)
+  }
+  return(essays)
+}
+
+d <- '../Data/annotation_tool/My Files/'
+
+getannotations(d)
