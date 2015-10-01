@@ -2,6 +2,7 @@
 library(reshape2)
 library(plyr)
 library(dplyr)
+library(stringr)
 
 ################## BMI STUDY
 bmi <- read.csv('Datasets from Geoff/Colorado middle school materials/bmi study colorado.csv')
@@ -97,7 +98,7 @@ temp.no8$Date[which(temp.no8$intervention=='4')] <- '02/24/09'
 col.8 <- read.xlsx('co_8th_grade_only.xls', sheetIndex = 1)
 col8.melt <- melt(col.8, id.vars=c('subnum', 'Grade'),
                   measure.vars=c('int1.', 'int2.', 'Int.3.', 'Int.4', 'Int.5'))
-library(stringr)
+
 intnum <- str_extract(col8.melt$variable, '[0-9]')
 col8.melt$intervention <- intnum
 names(col8.melt)[1] <- 'ID'
@@ -189,29 +190,56 @@ prompts <- data.frame(Intervention_number=c(as.character(prompts.schools$Interve
 
 write.csv(prompts, 'prompts9.29.11.csv')
 
+######## fixing id numbers for CO/CA latino
+df.e <- read.csv('../Data/3 CSV Files/essays9.29.15.csv', sep='|', quote="")
+df.d <- read.csv('../Data/3 CSV Files/demog9.11.15.csv')
+
+lat.ids <- df.e$ID[which(df.e$Study=='CO/CA Latino')]
+lat.ids <- paste(as.character(lat.ids), '.3', sep='')
+df.e$ID <- as.character(df.e$ID)
+df.e$ID[which(df.e$Study=='CO/CA Latino')] <- lat.ids
+
+## writing cohort number into essay file
+
+df <- left_join(df.e, df.d[,c(1,3)])
+df <- df[,1:7]
+df$Essay <- as.character(df$Essay)
+df<-unique(df)
+
+write.table(df, 'essays9.30.15.csv', sep='|', row.names=F, quote=F)
+
 ######## Appending annotated essays
 
-getannotations <- function(parentdir) {
+getannotations <- function(parentdir){
   dirlist <- list.files(parentdir, pattern='lirsm*')
   essays <- ''
+  paths <- ''
   for(i in dirlist){
     esslist <- list.files(paste(parentdir, i, sep='/'), pattern='.*.txt')
+    path <- paste(parentdir, i, esslist, sep='/')
     essays <- c(essays, esslist)
+    paths <- c(paths, path)
   }
-  return(essays)
+  return(data.frame(essays, paths))
 }
 
 d <- '../Data/annotation_tool/My Files/'
 
 ess.file <- getannotations(d)
-ess.first <- ess.file[which(str_detect(ess.file, '^[0-9]'))]
-file.comp <- str_split(ess.first, pattern = '_')
+ess.first <- ess.file[which(str_detect(ess.file$essays, '^[0-9]')),]
+file.comp <- str_split(ess.first$essays, pattern = '_')
 file.comp <- file.comp[-1]
-ess.first <- ess.first[-1]
-filedetails <- data.frame(filename=ess.first,
+ess.first <- ess.first[-1,]
+filedetails <- data.frame(filename=ess.first$essays,
                         id=unlist(lapply(file.comp, '[[', 1)),
                         cond=unlist(lapply(file.comp, '[[', 2)),
                         date=unlist(lapply(file.comp, '[[', 3)),
-                        int=unlist(lapply(file.comp, '[[', 4))
-                         
-           
+                        int=unlist(lapply(file.comp, '[[', 4)),
+                        path=ess.first$paths)
+
+filedetails$int <- substr(filedetails$int, 1,1)
+
+filedetails$essay <- ''                         
+for(i in 1:length(filedetails$path)){
+  try(filedetails$essay[i]<-readLines(as.character(filedetails$path[i])))
+}           
