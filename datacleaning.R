@@ -113,7 +113,7 @@ col8.melt<-distinct(col8.melt)
 
 
 write.table(col8.melt, 'col8.temp.csv', sep='|', row.names=F)
-#I edited a few rows by hand
+#I edited a few rows by hand =()
 df<-read.csv('col8.temp2.csv', sep='|')
 col8.melt$condition <- df$condition
 col8.melt <- col8.melt[,-3]
@@ -208,6 +208,24 @@ df<-unique(df)
 
 write.table(df, 'essays9.30.15.csv', sep='|', row.names=F, quote=F)
 
+######## Creating files for RAs to append selected values
+library(dplyr)
+df.essays <- read.csv('../Data/3 CSV Files/essays9.30.15.csv', sep = '|', quote="")
+
+df.RA1 <- filter(df.essays, Cohort == 'Cohort 3' | 
+                   Cohort == 'Cohort 4' | Cohort == 'Cohort 8' ) ##JB
+df.RA2 <- filter(df.essays, Cohort == 'Cohort 1' | 
+                   Cohort == 'Cohort 2' | Cohort == 'Cohort 5' ) ##TT
+df.RA3 <- filter(df.essays, Cohort == 'Cohort 6 ' | 
+                   Cohort == 'Cohort 7' | Cohort == 'Cohort 8' ) ##MB
+df.RA3 <- filter(df.essays, Study == 'CO/CA Latino') %>%
+  bind_rows(df.RA3)
+
+write.table(df.RA1 , 'RA1.csv', sep='|', row.names=F, quote=F)
+write.table(df.RA2 , 'RA2.csv', sep='|', row.names=F, quote=F)
+write.table(df.RA3 , 'RA3.csv', sep='|', row.names=F, quote=F)
+
+a <- read.csv('../Data/3 CSV Files/RA1a.csv', sep='|', quote="")
 ######## Appending annotated essays
 
 getannotations <- function(parentdir){
