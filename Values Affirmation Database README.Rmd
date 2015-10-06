@@ -1,7 +1,7 @@
 ---
 title: "Values Affirmation Database README"
 output: pdf_document
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+date: '`r format(Sys.time(), ''%d %B, %Y'')`'
 ---
 
 This document describes the database compiled as part of the NSF and ROADS sponsored research for the investigation of the values affirmation essays using natural language processing methodology.

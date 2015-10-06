@@ -3,6 +3,7 @@ library(reshape2)
 library(plyr)
 library(dplyr)
 library(stringr)
+library(foreign)
 
 ################## BMI STUDY
 bmi <- read.csv('Datasets from Geoff/Colorado middle school materials/bmi study colorado.csv')
@@ -226,6 +227,58 @@ write.table(df.RA2 , 'RA2.csv', sep='|', row.names=F, quote=F)
 write.table(df.RA3 , 'RA3.csv', sep='|', row.names=F, quote=F)
 
 a <- read.csv('../Data/3 CSV Files/RA1a.csv', sep='|', quote="")
+
+######## Getting lab test scores from group affirmation data
+df <- read.spss("../Data/Group Affirmation Chapter WORKING FILE-Mar29.sav", to.data.frame = T)
+
+df.melt <- melt(df, id.vars = c('subjectnum', 'interventcond', 'stereotyped'), 
+                measure.vars=c('test1numCorrect', 
+                               'test2numCorrect', 
+                               'test3numCorrect'))
+df.melt$subjectnum <- paste(df.melt$subjectnum, '.2', sep = '')
+names(df.melt)[1] <- 'ID'
+df.outcome.group <- df.essays[which(df.essays$Study == 'Group Affirmation'),
+                              c(1,6)]
+df.outcome.group <- left_join(df.outcome.group, df.melt)
+df.outcome.group$variable <- factor(df.outcome.group$variable, 
+                                 labels = c('Lab Test 1', 'Lab Test 2', 
+                                            'Lab Test 3'))
+
+df.outcome.group <- data.frame(ID=df.outcome.group$ID,
+                               Study=rep('Group Affirmation', 
+                                         length(df.outcome.group$ID)),
+                               Grade=df.outcome.group$value,
+                               Grade_type=df.outcome.group$variable,
+                               est_Grade_date=df.outcome.group$Intervention_Date,
+                               intervention_year='')
+
+df.outcomes <- rbind(df.outcomes, df.outcome.group)
+
+write.csv(df.outcomes, '../Data/3 CSV Files/grades10.5.15.csv')
+
+######## Prompts
+df.prompts <- read.csv('../Data/3 CSV Files/prompts10.5.15.csv', sep='|', quote="")
+
+editdist <- function(charlevels){
+  library(stringdist)
+  mx <- matrix(nrow = length(charlevels), ncol=length(charlevels))
+  for(i in 1:length(charlevels)){
+    for(j in 1:length(charlevels)){
+      mx[i,j] <- stringdist(charlevels[i], charlevels[j], method='lv')
+    }
+  }
+  mx
+}
+
+edit.mat <- editdist(levels(df.prompts$Essay.Prompt))
+edit.mat[lower.tri(edit.mat)] <- NA
+indicators <- which(edit.mat<10, arr.ind=T)
+indicators <- indicators[which(indicators[,1]!=indicators[,2], arr.ind=T), ]
+indicators <- indicators[which(!(indicators[,1] %in% indicators[,2])),]
+
+levels(df.prompts$Essay.Prompt)[indicators[,2]] <- levels(df.prompts$Essay.Prompt)[indicators[,1]]
+
+write.table(df.prompts , 'prompts10.6.15.csv', sep='|', row.names=F, quote=F)
 ######## Appending annotated essays
 
 getannotations <- function(parentdir){

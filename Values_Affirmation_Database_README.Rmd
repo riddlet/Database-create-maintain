@@ -1,0 +1,177 @@
+---
+title: "Values Affirmation Database README"
+output: pdf_document
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+---
+
+This document describes the database compiled as part of the NSF and ROADS sponsored research for the investigation of the values affirmation essays using natural language processing methodology.
+
+#Contents of the database
+The database consists of four files. The name of the file indicates the content of the file, plus the date it was last edited:
+
+1. **demog9.11.15.csv** - This file features the demographic characteristics of the participants in the studies. As indicated by the number string in the filename, it was last updated on 9/11/2015. Similar dates are appended to the other files.
+2. **essays9.30.15.csv** - This file includes the essays and their corresponding attributes.
+3. **grades9.11.15.csv** - This file includes grades and other academic outcome measures for participants in the studies
+4. **prompts10.5.15.csv** - This file includes characteristics of the prompts for each of the possible interventions.
+
+##File format and structure
+In order to make these files usable across a variety of software types and system environments, they have been stored as basic csv files. However, using commas to separate the field values in the essays and prompts file will obviously lead to problems, because the content of the fields occasionally contain columns. For that reason, these files are stored as pipe-separated values (a pipe is a |). It's possible to see the difference in structure by opening the files using a basic text-editor (textEdit on mac, notepad, sublimetext, textwrangler, etc)
+
+The format of each file follows the general principles of [relational databases](https://en.wikipedia.org/wiki/Relational_model). Each file is stored in what is often referred to as a 'long' format, and each file features a specific type of observational unit (i.e. essays, participants, outcomes, or prompts). Within each file, these observational units are organized by the variables, which form columns, and the observations, which form rows. 
+
+The variables for each file are listed below.
+
+####Essays
+```{r, echo=FALSE}
+df.essays <- read.csv('../Data/3 CSV Files/essays9.30.15.csv', sep='|', quote="")
+df.essays <- df.essays[which(df.essays$Essay != ''),]
+names(df.essays)
+```
+####Participants
+```{r, echo=F}
+df.demographics <- read.csv('../Data/3 CSV Files/demog9.11.15.csv')
+names(df.demographics)[-6:-8]
+```
+####Outcomes
+```{r, echo=F}
+df.outcomes <- read.csv('../Data/3 CSV Files/grades10.5.15.csv')
+df.outcomes <- df.outcomes[which(df.outcomes$Grade != ''),]
+df.outcomes <- df.outcomes[,-1]
+names(df.outcomes)[-1]
+```
+####Prompts
+```{r, echo=F, message=FALSE}
+df.prompts <- read.csv('../Data/3 CSV Files/prompts10.6.15.csv', sep='|', quote="")
+df.prompts <- df.prompts[,-1]
+```
+
+Note that this file structure makes it very clear what information is contained where. Very little explication of the content of each file is needed here.
+
+All files with the exception of the prompts share a common *key* of the participant ID number. This allows the analyst to join together data from each file using basic join operations. Where studies had duplicate ID numbers, we appended a `.x` to the end of the ID, where x is an integer, incremented each time we encountered a file that had ID numbers that duplicated ID numbers already incorporated into the database.
+
+The prompts file, since the unit of measure is the intervention and not the individual, does not have a specific participant ID associated with each row. Instead, the information from this file can be joined to the others using one of the multiple keys it has in common with the other files. For instance, if the analyst were interested in joining the prompts to the Essays table, one could join by the combination of `Intervention_number`, `Intervention_date`, and `Condition`, which would correctly join the information in the two, yielding a new table that contained the prompt information for each essay oin the Essays file.
+
+Furthermore, these data are stored in what is sometimes referred to as a 'long' format. This means that there are a minimal number of columns, and each table features measurements on a single element (i.e. essays, participants, outcomes, or prompts). The rows are the individual observations
+
+
+###File contents
+I now use these files to illustrate some basic properties about the database. We will investigate these files one-by-one, before examining various combinations of information. I will also go in depth for the Windsor data in some areas.
+
+####Essays
+
+- **Total Number of essays**
+```{r, echo=F, message=FALSE}
+length(df.essays$Essay)
+```
+
+- **Number of essays per study**
+```{r, echo=F, message=FALSE}
+table(df.essays$Study)
+```
+
+- **Number of essays per Cohort - Windsor data only**
+```{r, echo=F, message=FALSE}
+library(dplyr)
+temp <- filter(df.essays, Study == 'Connecticut')
+temp$Cohort <- droplevels(temp$Cohort)
+table(temp$Cohort)
+```
+
+- **Number of interventions per Cohort - Windsor data only**
+```{r, echo=F, message=FALSE}
+table(temp$Intervention_number, temp$Cohort)
+```
+
+- **Intervention Dates per Cohort - Windsor data only**
+```{r, echo=F, message=FALSE}
+temp$Intervention_Date <- droplevels(temp$Intervention_Date)
+temp$Intervention_Date <- as.Date(as.character(temp$Intervention_Date), format="%m/%d/%Y")
+temp <- arrange(temp, Intervention_Date)
+table(temp$Intervention_Date, temp$Cohort)
+```
+
+The other dataset for which we have extensive longitudinal measurements is the data sometimes referred to as the CO/CA Latino data. While we have been able to include this data in our database, there are some properties that remain opaque because of the multiple files we received, each of which only contains partial data. For instance, in one excel file, the aome participant ID numbers appear in both the California *and* the Colorado data. Of course, this doesn't mean that all of these individuals moved. Ordinarily, I would give them different ID numbers, but the individuals for whom this is true are missing most of their essays from the Colorado data. This is just an example of some of the problems associated with these data. **As a solution** I would suggest that whoever is responsible for the curation of these data simply reorganize them entirely in a way that is more intuitive. Kevin Binning sent me the majority of these data, and while I appreciate his prompt responses, it's difficult to make heads or tails of what he has sent me and explained over email. It would be much simpler if he could deliver a single file (or a set of relational files!) that contain the information we've described here.
+
+####Demographics
+
+- **Number of participants**
+```{r, echo=F, message=FALSE}
+length(df.demographics$ID)
+```
+
+- **Number of participants per study**
+```{r, echo=F, message=FALSE}
+table(df.demographics$Study)
+```
+
+- **Breakdown of participant race by study**
+```{r, echo=F, message=FALSE}
+df.demographics$Ethnicity[which(df.demographics$Ethnicity == '#N/A')] <- NA
+df.demographics$Ethnicity[which(df.demographics$Ethnicity == '')] <- NA
+df.demographics$Ethnicity[which(df.demographics$Ethnicity == 'Other')] <- 'Other/Mixed'
+df.demographics$Ethnicity <- droplevels(df.demographics$Ethnicity)
+table(df.demographics$Ethnicity, df.demographics$Study)
+```
+
+- **Breakdown of participant gender by study**
+```{r, echo=F, message=FALSE}
+df.demographics$Gender[which(df.demographics$Gender == '#NULL!')] <- NA
+df.demographics$Gender[which(df.demographics$Gender == '')] <- NA
+df.demographics$Gender <- droplevels(df.demographics$Gender)
+table(df.demographics$Study, df.demographics$Gender)
+```
+
+####Outcomes
+
+- **Total number of outcome observations**
+```{r, echo=F, message=FALSE}
+length(df.outcomes$ID)
+```
+
+- **Types of outcomes per study**
+```{r, echo=F, message=FALSE}
+df.outcomes$Study <- droplevels(df.outcomes$Study)
+table(df.outcomes$Grade_type, df.outcomes$Study)
+```
+
+- **Outcomes by date - Windsor data only**
+```{r, echo=F, message=FALSE}
+temp <- filter(df.outcomes, Study == 'Connecticut')
+temp$est_Grade_date <- droplevels(temp$est_Grade_date)
+levels(temp$est_Grade_date)[17:22] <- c('2/1/04', '2/1/05', '2/1/06', '6/30/04',
+                                        '6/30/05', '6/30/06')
+temp$est_Grade_date <- as.Date(as.character(temp$est_Grade_date), format="%m/%d/%y")
+temp <- arrange(temp, est_Grade_date)
+temp$Grade_type <- droplevels(temp$Grade_type)
+table(temp$est_Grade_date, temp$Grade_type)
+```
+
+####Prompts
+This file is still being created. The windsor data is finished, so we will limit our description to these data
+
+- **Number of different prompts**
+```{r, echo=F, message=FALSE}
+temp <- filter(df.prompts, Study == 'Connecticut')
+temp <- temp[which(temp$Essay.Prompt!=''),]
+temp$Essay.Prompt <- droplevels(temp$Essay.Prompt)
+length(unique(temp$Essay.Prompt))
+```
+
+- **Prompts per Cohort**
+```{r, echo=F, message=FALSE, width=60}
+temp2 <- temp %>%
+  group_by(Cohort, Intervention_number) %>%
+  distinct(Essay.Prompt) %>%
+  select(Intervention_number, Condition, Intervention_Date, Study, Cohort, Essay.Prompt)
+
+for(i in 1:length(temp2$Essay.Prompt)){
+  writeLines(paste(temp2$Cohort[i]))
+  writeLines('####################\n')
+  writeLines(paste('Intervention Number ', temp2$Intervention_number[i]))
+  writeLines('^^^^^^^^^^^^^^^^^^\n')
+  writeLines(paste('Condition', temp2$Condition[i]))
+  writeLines('~~~~~~~~~~~~~~~~~~~\n')
+  writeLines(strwrap(temp2$Essay.Prompt[i]))
+}
+
+```
