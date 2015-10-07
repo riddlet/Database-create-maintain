@@ -1,22 +1,26 @@
 ---
 title: "Values Affirmation Database README"
 output:
-  word_document: default
   pdf_document:
     toc: yes
     toc_depth: 3
+  word_document: default
 date: '`r format(Sys.time(), "%d %B, %Y")`'
 ---
-Introduction
-==================
+----------------- 
+
+#Introduction  
+
 This document describes the database compiled as part of the NSF and ROADS sponsored research for the investigation of the values affirmation essays using natural language processing methodology.
 
-The database consists of four files. The name of the file indicates the content of the file, plus the date it was last edited:
+The database consists of four files:
 
-1. **demog9.11.15.csv** - This file features the demographic characteristics of the participants in the studies. As indicated by the number string in the filename, it was last updated on 9/11/2015. Similar dates are appended to the other files.
-2. **essays9.30.15.csv** - This file includes the essays and their corresponding attributes.
-3. **grades9.11.15.csv** - This file includes grades and other academic outcome measures for participants in the studies
-4. **prompts10.6.15.csv** - This file includes characteristics of the prompts for each of the possible interventions.
+1. **demog** - This file features the demographic characteristics of the participants in the studies. As indicated by the number string in the filename, it was last updated on 9/11/2015. Similar dates are appended to the other files.
+2. **essays** - This file includes the essays and their corresponding attributes.
+3. **grades** - This file includes grades and other academic outcome measures for participants in the studies
+4. **prompts** - This file includes characteristics of the prompts for each of the possible interventions.
+
+Each file's name indicates the content of the data, plus the date on which the file was generated. At the time of this writing, the files have the names `demog9.11.15.csv`, `essays9.30.15.csv`, `grades10.5.15.csv`, and `prompts10.8.15.csv`.
 
 #File format and structure
 In order to make these files usable across a variety of software types and system environments, they have been stored as basic csv files. However, using commas to separate the field values in the essays and prompts file will obviously lead to problems, because the content of the fields occasionally contain columns. For that reason, these files are stored as pipe-separated values (a pipe is a |). It's possible to see the difference in structure by opening the files using a basic text-editor (textEdit on mac, notepad, sublimetext, textwrangler, etc)
@@ -45,7 +49,7 @@ names(df.outcomes)[-1]
 ```
 ##Prompts
 ```{r, echo=F, message=FALSE}
-df.prompts <- read.csv('../Data/3 CSV Files/prompts10.6.15.csv', sep='|', quote="")
+df.prompts <- read.csv('../Data/3 CSV Files/prompts10.8.15.csv', sep='|', quote="")
 df.prompts <- df.prompts[,-1]
 names(df.prompts)
 ```
@@ -208,6 +212,12 @@ The other dataset for which we have extensive longitudinal measurements is the d
 
 ## Women & Math study
 We are still missing the essays from this study. The last contact we had about this was with Krisitin Layous on 1/14/15. She indicated that the essays were still on hard copy and in Geoff's lab somewhere.
+
+## Affirmation choice
+This refers to data from Silverman, Logel, & Cohen (2013, *JESP*). We obtained scanned copies of the essays, but have no demographic information, outcome information, nor do we have subject ID numbers for the scanned essays. Arielle Silverman has suggested that it may not be possible to obtain this information. We have made repeated requests from Christine Logel, but have not yet received anything. The last time of contact was 5/7.
+
+## Surgeons
+These data (Salles, Cohen & Mueller, 2012 *Journal of the American College of Surgeons*) are largely not usable at the moment. The file we were sent is missing labels for the columns, so aside from some obvious ones (e.g. essays), it isn't clear which variable each column contains. Additionally, much of the data is missing and the essays are cut off in the middle of sentences.
 
 ## Prompts
 We have finished including prompt information for the Windsor data and are currently in the process of appending the same information for the other samples.
