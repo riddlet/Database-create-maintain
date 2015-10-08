@@ -281,7 +281,8 @@ levels(df.prompts$Essay.Prompt)[indicators[,2]] <- levels(df.prompts$Essay.Promp
 write.table(df.prompts , 'prompts10.6.15.csv', sep='|', row.names=F, quote=F)
 ######## Appending annotated essays
 
-getannotations <- function(parentdir){
+#function returns paths to all text files in the directory
+getannotations <- function(parentdir, filetype){
   dirlist <- list.files(parentdir, pattern='lirsm*')
   essays <- ''
   paths <- ''
@@ -296,11 +297,13 @@ getannotations <- function(parentdir){
 
 d <- '../Data/annotation_tool/My Files/'
 
-ess.file <- getannotations(d)
-ess.first <- ess.file[which(str_detect(ess.file$essays, '^[0-9]')),]
-file.comp <- str_split(ess.first$essays, pattern = '_')
-file.comp <- file.comp[-1]
-ess.first <- ess.first[-1,]
+ess.file <- getannotations(d) #get the file names
+ess.first <- ess.file[which(str_detect(ess.file$essays, '^[0-9]')),] #only keeping the ones that start with anumber (i.e. first round)
+file.comp <- str_split(ess.first$essays, pattern = '_') #split filename into id, condition, date, and intervention number
+file.comp <- file.comp[-1]#get rid of example essay
+ess.first <- ess.first[-1,]#get rid of example essay
+
+#store these details in a dataframe
 filedetails <- data.frame(filename=ess.first$essays,
                         id=unlist(lapply(file.comp, '[[', 1)),
                         cond=unlist(lapply(file.comp, '[[', 2)),
@@ -308,9 +311,17 @@ filedetails <- data.frame(filename=ess.first$essays,
                         int=unlist(lapply(file.comp, '[[', 4)),
                         path=ess.first$paths)
 
-filedetails$int <- substr(filedetails$int, 1,1)
+filedetails$int <- substr(filedetails$int, 1,1) #remove the '.txt.'
 
+#get the text in each file
 filedetails$essay <- ''                         
 for(i in 1:length(filedetails$path)){
   try(filedetails$essay[i]<-readLines(as.character(filedetails$path[i])))
 }           
+
+cleantext<-function(essaytext){
+  gsub()
+}
+
+name.rex <- "(^\\[\\s*)|"
+
