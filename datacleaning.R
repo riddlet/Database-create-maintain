@@ -319,9 +319,36 @@ for(i in 1:length(filedetails$path)){
   try(filedetails$essay[i]<-readLines(as.character(filedetails$path[i])))
 }           
 
-cleantext<-function(essaytext){
-  gsub()
+cleanannotation<-function(essaytext){
+  annotation.rex <- "(^\\[\\s*)|(\\s*\\]*$)|(\\\\{1,})"
+  gsub(annotation.rex, '', essaytext)
 }
 
-name.rex <- "(^\\[\\s*)|"
+correctessay <- function(essaytext){
+  #additions
+  dol.punct <- "(\\s?)\\$([.:,?;])\\$"
+  dol <- "(\\s?)\\$(.*?)\\$"
+  essaytext <- gsub(dol.punct, '\\2', essaytext)
+  essaytext <- gsub(dol, '\\1\\2', essaytext)
+  
+  #deletions
+  multi.car <- "\\{.*?}\\s?\\^(.*?)\\^"
+  single.car <- "(.*)\\s?\\^\\1\\^"
+  essaytext <- gsub(multi.car, '', essaytext)
+  essaytext <- gsub(single.car, '', essaytext)
+  
+  #substitutions
+  punct <- "[.;,?:]\\s?@([.;,?:])@"
+  multi.sub <- "\\{.*?}\\s?@(.*?)@"
+  single.sub <- "\\w*'?\\w*['.,]?\\s?@(.*?)@"
+  essaytext <- gsub(punct, '\\1', essaytext)
+  essaytext <- gsub(multi.sub, '\\1', essaytext)
+  essaytext <- gsub(single.sub, '\\1', essaytext)
+}
 
+filedetails$annot <- cleanannotation(filedetails$essay)
+filedetails$corrected <- correctessay(filedetails$annot)
+
+##looks like there are a bunch of essays with earlier annotations.
+
+#filedetails[1000,]
