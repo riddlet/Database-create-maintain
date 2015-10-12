@@ -4,6 +4,7 @@ library(plyr)
 library(dplyr)
 library(stringr)
 library(foreign)
+library(xlsx)
 
 ################## BMI STUDY
 bmi <- read.csv('Datasets from Geoff/Colorado middle school materials/bmi study colorado.csv')
@@ -58,7 +59,6 @@ df.temp <- data.frame(ID=df$ID,
 write.table(df.temp, 'essays9.28.15.csv', sep='|', row.names=F, quote=F)
 
 ####### adding the colorado essays
-library(xlsx)
 
 df.col <- read.xlsx('JPSP_affirmation_text.xlsx', sheetName = 'COLORADO')
 
@@ -348,6 +348,7 @@ correctessay <- function(essaytext){
 
 filedetails$annot <- cleanannotation(filedetails$essay)
 filedetails$corrected <- correctessay(filedetails$annot)
+filedetails$joinme <- paste(filedetails$id, filedetails$int)
 
 path <- '../Data/annotation_tool/New Files/'
 
@@ -359,11 +360,11 @@ og.first <- og.first[-1,]#get rid of example essay
 
 #store these details in a dataframe
 og.details <- data.frame(filename=og.first$essays,
-                          id=unlist(lapply(og.comp, '[[', 1)),
-                          cond=unlist(lapply(og.comp, '[[', 2)),
-                          date=unlist(lapply(og.comp, '[[', 3)),
-                          int=unlist(lapply(og.comp, '[[', 4)),
-                          path=og.first$paths)
+                         id=unlist(lapply(og.comp, '[[', 1)),
+                         cond=unlist(lapply(og.comp, '[[', 2)),
+                         date=unlist(lapply(og.comp, '[[', 3)),
+                         int=unlist(lapply(og.comp, '[[', 4)),
+                         path=og.first$paths)
 
 og.details$int <- substr(og.details$int, 1,1) #remove the '.txt.'
 
@@ -373,36 +374,55 @@ for(i in 1:length(og.details$path)){
   try(og.details$essay[i]<-readLines(as.character(og.details$path[i])))
 }           
 
+#get original essay text
 og.details$essay <- cleanannotation(og.details$essay)
 
-df.annotations <- left_join(og.details, filedetails, by='filename')
-df.annotations <- df.annotations[,c(1:7, 14, 15)]
+#join based on filename
+df.annotations <- left_join(filedetails, og.details, by='filename')
+#remove duplicated entries based on filename
+df.annotations <- df.annotations[which(!duplicated(df.annotations$filename)),]
 
-df.essay <- read.csv('../Data/3 CSV Files/essays9.30.15.csv', sep='|', )
-names(df.annotations)[7] <- 'Essay'
+df.essays <- read.csv('../Data/essays9.30.15.csv', sep='|')
+#join to essays file on essay text
+names(df.annotations)[16] <- 'Essay'
+df <- left_join(df.essays, df.annotations[,c('annot', 'corrected', 'Essay')], 
+                by='Essay')
+#remove nan and duplicate essays
+df <- df[which(!duplicated(paste(df$Essay, df$ID))),]
 
-df.join <- df.essay[which(df.essay$Study=='Connecticut'),]
-df.join.2 <- df.essay[which(df.essay$Study!='Connecticut'),]
-df.join.2$annot <- ''
-df.join.2$corrected <- ''
+#remove the "N/A" character
+a <- df$corrected[45]
+df$corrected[which(df$corrected==a)] <- NA
+table(is.na(df$corrected))
+table(df$corrected == '')
 
-df.join <- left_join(df.join, df.annotations[,c(7:9)])
-df.join <- unique(df.join)
-df.essay <- rbind(df.join, df.join.2)
+write.table(df, 'annotations10.12.15.csv', sep='|', row.names=F, quote=F)
+#fixed some formatting by hand here
+df.essays <- read.csv('annotations10.12.15.csv', sep='|',quote="")
 
-write.table(df.essay, 'essay10.11.15.csv', sep='|', row.names=F, quote=F)
+###############
+#incorporating Emily's work'
+#Emily dug through the data to figure out why some participants were mismatched 
+#with cohorts. Mostly, it's because they stayed back a grade, but there are a 
+#few participants who ended up completing more than one intervention on the same 
+#day
 
-names(filedetails)[2:5] <- c('ID', 'Condition', 'Intervention_Date', 'Intervention_number')
+df.essays <- read.csv('annotations10.12.15.csv', sep='|',quote="")
+questionable.entries <- read.xlsx('../Data/PPIDs with Mismatched Data-Multiple Cohorts.xlsx', 
+                                  sheetIndex = 1)
+questionable.entries <- questionable.entries[1:631, 1:7]
+kosher.entries <- read.xlsx('../Data/PPIDs with Mismatched Data-Multiple Cohorts.xlsx', 
+                            sheetIndex = 2)
+kosher.entries <- kosher.entries[1:172, 1:7]
 
-df.essay <- read.csv('../Data/3 CSV Files/essays9.30.15.csv', sep='|', )
-df.essay[] <- lapply(df.essay, as.character)
-filedetails[] <- lapply(filedetails, as.character)
-temp <- as.Date(filedetails$Intervention_Date, format = '%m-%d-%Y')
-filedetails$Intervention_Date <- format(temp, '%m/%d/%Y')
-filedetails$Intervention_Date <- gsub("0(\\d/)", "\\1", filedetails$Intervention_Date) 
+emily.filter <- anti_join(questionable.entries, kosher.entries)
 
-df.essay <- left_join(df.essay, filedetails[,c(2:5,8,9)], by = c('ID', 'Intervention_number'))
-df.essay <- df.essay[,c(1:7,10,11)]
-names(df.essay)[c(5,6)] <- c('Condition', 'Intervention_Date')
+names(emily.filter)[c(1,2,5)] <- c('ID', 'Intervention_number', 
+                                   'Intervention_Date')
+emily.filter <- emily.filter[,1:6]
+emily.filter$Intervention_Date <- as.character(emily.filter$Intervention_Date)
 
-write.table(df.essay, 'essay10.11.15.csv', sep='|', row.names=F, quote=F)
+df.essays <- anti_join(df.essays, emily.filter, 
+                       by= c('ID', 'Intervention_number', 'Essay'))
+
+#This does not seem perfect, but I guess it will do for now.

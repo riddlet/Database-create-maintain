@@ -31,7 +31,7 @@ The variables for each file are listed below.
 
 ##Essays
 ```{r, echo=FALSE}
-df.essays <- read.csv('../Data/3 CSV Files/essays9.30.15.csv', sep='|', quote="")
+df.essays <- read.csv('../Data/3 CSV Files/essays10.12.15.csv', sep='|', quote="")
 df.essays <- df.essays[which(df.essays$Essay != ''),]
 names(df.essays)
 ```
@@ -160,8 +160,9 @@ This file is still being created. The windsor data is finished, so we will limit
 ```{r, echo=F, message=FALSE}
 temp <- filter(df.prompts, Study == 'Connecticut')
 temp <- temp[which(temp$Essay.Prompt!=''),]
-temp$Values <- droplevels(temp$Values)
-length(unique(temp$Values))
+temp$Essay.Prompt <- droplevels(temp$Essay.Prompt)
+num.prompts <- length(unique(temp$Essay.Prompt))
+num.prompts
 ```
 
 - **Number of unique values combinations**
@@ -170,10 +171,23 @@ temp <- filter(df.prompts, Study == 'Connecticut')
 temp <- temp[which(temp$Essay.Prompt!=''),]
 temp$Essay.Prompt <- droplevels(temp$Essay.Prompt)
 length(unique(temp$Essay.Prompt))
+
 ```
 
-- **Prompt text per Cohort**
+- **Prompt type per Cohort**
 ```{r, echo=F, message=FALSE}
+temp$Condition <- droplevels(temp$Condition)
+levels(temp$Condition) <- c(rep('Other', 3), rep('Control', 7), 
+                            rep('Treat', 7))
+temp$prompt.factor <- factor(temp$Essay.Prompt, levels=letters)
+#lvls <- c(LETTERS, paste('A', LETTERS, sep=''))
+#temp$prompt.factor <- factor(temp$Essay.Prompt, labels=lvls[1:num.prompts])
+#temp$seq <- with(temp, ave(prompt.factor, Intervention_number, Cohort, FUN=seq_along))
+
+#prompt.wide <- dcast(temp, Intervention_number~Cohort, value.var = 'prompt.factor')
+
+#temp2 <- temp[which(Condition=='Control'),]
+
 temp2 <- temp %>%
   group_by(Cohort, Intervention_number) %>%
   distinct(Essay.Prompt) %>%
