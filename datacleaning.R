@@ -295,9 +295,9 @@ getannotations <- function(parentdir, filetype){
   return(data.frame(essays, paths))
 }
 
-d <- '../Data/annotation_tool/My Files/'
+path <- '../Data/annotation_tool/My Files/'
 
-ess.file <- getannotations(d) #get the file names
+ess.file <- getannotations(path) #get the file names
 ess.first <- ess.file[which(str_detect(ess.file$essays, '^[0-9]')),] #only keeping the ones that start with anumber (i.e. first round)
 file.comp <- str_split(ess.first$essays, pattern = '_') #split filename into id, condition, date, and intervention number
 file.comp <- file.comp[-1]#get rid of example essay
@@ -349,6 +349,60 @@ correctessay <- function(essaytext){
 filedetails$annot <- cleanannotation(filedetails$essay)
 filedetails$corrected <- correctessay(filedetails$annot)
 
-##looks like there are a bunch of essays with earlier annotations.
+path <- '../Data/annotation_tool/New Files/'
 
-#filedetails[1000,]
+og.file <- getannotations(path) #get the file names
+og.first <- og.file[which(str_detect(og.file$essays, '^[0-9]')),] #only keeping the ones that start with anumber (i.e. first round)
+og.comp <- str_split(og.first$essays, pattern = '_') #split filename into id, condition, date, and intervention number
+og.comp <- og.comp[-1]#get rid of example essay
+og.first <- og.first[-1,]#get rid of example essay
+
+#store these details in a dataframe
+og.details <- data.frame(filename=og.first$essays,
+                          id=unlist(lapply(og.comp, '[[', 1)),
+                          cond=unlist(lapply(og.comp, '[[', 2)),
+                          date=unlist(lapply(og.comp, '[[', 3)),
+                          int=unlist(lapply(og.comp, '[[', 4)),
+                          path=og.first$paths)
+
+og.details$int <- substr(og.details$int, 1,1) #remove the '.txt.'
+
+#get the text in each file
+og.details$essay <- ''                         
+for(i in 1:length(og.details$path)){
+  try(og.details$essay[i]<-readLines(as.character(og.details$path[i])))
+}           
+
+og.details$essay <- cleanannotation(og.details$essay)
+
+df.annotations <- left_join(og.details, filedetails, by='filename')
+df.annotations <- df.annotations[,c(1:7, 14, 15)]
+
+df.essay <- read.csv('../Data/3 CSV Files/essays9.30.15.csv', sep='|', )
+names(df.annotations)[7] <- 'Essay'
+
+df.join <- df.essay[which(df.essay$Study=='Connecticut'),]
+df.join.2 <- df.essay[which(df.essay$Study!='Connecticut'),]
+df.join.2$annot <- ''
+df.join.2$corrected <- ''
+
+df.join <- left_join(df.join, df.annotations[,c(7:9)])
+df.join <- unique(df.join)
+df.essay <- rbind(df.join, df.join.2)
+
+write.table(df.essay, 'essay10.11.15.csv', sep='|', row.names=F, quote=F)
+
+names(filedetails)[2:5] <- c('ID', 'Condition', 'Intervention_Date', 'Intervention_number')
+
+df.essay <- read.csv('../Data/3 CSV Files/essays9.30.15.csv', sep='|', )
+df.essay[] <- lapply(df.essay, as.character)
+filedetails[] <- lapply(filedetails, as.character)
+temp <- as.Date(filedetails$Intervention_Date, format = '%m-%d-%Y')
+filedetails$Intervention_Date <- format(temp, '%m/%d/%Y')
+filedetails$Intervention_Date <- gsub("0(\\d/)", "\\1", filedetails$Intervention_Date) 
+
+df.essay <- left_join(df.essay, filedetails[,c(2:5,8,9)], by = c('ID', 'Intervention_number'))
+df.essay <- df.essay[,c(1:7,10,11)]
+names(df.essay)[c(5,6)] <- c('Condition', 'Intervention_Date')
+
+write.table(df.essay, 'essay10.11.15.csv', sep='|', row.names=F, quote=F)
