@@ -6,7 +6,36 @@ library(stringr)
 library(foreign)
 library(xlsx)
 
-################## BMI STUDY
+###################functions (i.e. greatest hits)
+cleanannotation<-function(essaytext){
+  annotation.rex <- "(^\\[\\s*)|(\\s*\\]*$)|(\\\\{1,})"
+  gsub(annotation.rex, '', essaytext)
+}
+
+correctessay <- function(essaytext){
+  #additions
+  dol.punct <- "(\\s?)\\$([.:,?;])\\$"
+  dol <- "(\\s?)\\$(.*?)\\$"
+  essaytext <- gsub(dol.punct, '\\2', essaytext)
+  essaytext <- gsub(dol, '\\1\\2', essaytext)
+  
+  #deletions
+  multi.car <- "\\{.*?}\\s?\\^(.*?)\\^"
+  single.car <- "(.*)\\s?\\^\\1\\^"
+  essaytext <- gsub(multi.car, '', essaytext)
+  essaytext <- gsub(single.car, '', essaytext)
+  
+  #substitutions
+  punct <- "[.;,?:]\\s?@([.;,?:])@"
+  multi.sub <- "\\{.*?}\\s?@(.*?)@"
+  single.sub <- "\\w*'?\\w*['.,]?\\s?@(.*?)@"
+  essaytext <- gsub(punct, '\\1', essaytext)
+  essaytext <- gsub(multi.sub, '\\1', essaytext)
+  essaytext <- gsub(single.sub, '\\1', essaytext)
+}
+
+
+################## BMI STUDY ###################################################
 bmi <- read.csv('Datasets from Geoff/Colorado middle school materials/bmi study colorado.csv')
 names(bmi)[1] <- 'ID'
 
@@ -394,7 +423,6 @@ df <- df[which(!duplicated(paste(df$Essay, df$ID))),]
 a <- df$corrected[45]
 df$corrected[which(df$corrected==a)] <- NA
 table(is.na(df$corrected))
-table(df$corrected == '')
 
 write.table(df, 'annotations10.12.15.csv', sep='|', row.names=F, quote=F)
 #fixed some formatting by hand here
@@ -412,10 +440,10 @@ questionable.entries <- read.xlsx('../Data/PPIDs with Mismatched Data-Multiple C
                                   sheetIndex = 1)
 questionable.entries <- questionable.entries[1:631, 1:7]
 kosher.entries <- read.xlsx('../Data/PPIDs with Mismatched Data-Multiple Cohorts.xlsx', 
-                            sheetIndex = 2)
+                            sheetIndex = 2) # these should be kept
 kosher.entries <- kosher.entries[1:172, 1:7]
 
-emily.filter <- anti_join(questionable.entries, kosher.entries)
+emily.filter <- anti_join(questionable.entries, kosher.entries) #these should be removed
 
 names(emily.filter)[c(1,2,5)] <- c('ID', 'Intervention_number', 
                                    'Intervention_Date')
@@ -426,3 +454,83 @@ df.essays <- anti_join(df.essays, emily.filter,
                        by= c('ID', 'Intervention_number', 'Essay'))
 
 #This does not seem perfect, but I guess it will do for now.
+
+
+############################## time to remove blank entries ####################
+df.essays <- read.csv('essays10.13.15.csv', sep='|', quote="")
+df.essays <- df.essays[which(df.essays$Essay!=''),]
+
+write.table(df.essays, 'essays10.15.15.csv', sep='|', row.names=F, quote=F)
+
+############################# write files for annotating #######################
+df.annotate <- read.csv('../Data/tobeannotated.csv', sep='|', quote="")
+
+df.annotate$Intervention_Date <- as.Date(df.annotate$Intervention_Date, 
+                                         format='%m/%d/%Y')
+df.annotate$Intervention_Date <- format(df.annotate$Intervention_Date, 
+                                        "%m-%d-%Y")
+
+filename <- paste(df.annotate$ID, 
+                  df.annotate$Condition,
+                  df.annotate$Intervention_Date,
+                  df.annotate$Intervention_number,
+                  sep='_')
+for(i in 1:length(df.annotate$Essay)) {
+  text <- paste('[', df.annotate$Essay[i], ']', sep='')
+  write(text, file=paste('../Data/ann/',filename[i], '.txt', sep=''))
+}
+
+############################# get skipped files ################################
+path <- '../Data/ann/Annot Done/'
+
+ess.file <- list.files(path) #get the file names
+file.comp <- str_split(ess.file, pattern = '_') #split filename into id, condition, date, and intervention number
+
+#store these details in a dataframe
+filedetails <- data.frame(filename=ess.file,
+                          id=unlist(lapply(file.comp, '[[', 1)),
+                          cond=unlist(lapply(file.comp, '[[', 2)),
+                          date=unlist(lapply(file.comp, '[[', 3)),
+                          int=unlist(lapply(file.comp, '[[', 4)))
+
+filedetails$int <- substr(filedetails$int, 1,1) #remove the '.txt.'
+
+#get the text in each file
+filedetails$essay <- ''                         
+for(i in 1:length(filedetails$filename)){
+  try(
+    filedetails$essay[i]<-readLines(
+      paste(path, as.character(filedetails$filename[i]), sep='')
+    )
+  )
+} 
+
+filedetails$annot <- cleanannotation(filedetails$essay)
+filedetails$corrected <- correctessay(filedetails$annot)
+
+df.essays <- read.csv('essays10.15.15.csv', sep='|', quote="")
+head(df.essays)
+
+#the only dupes here are from co/ca latino
+df.essays[which(duplicated(paste(df.essays$ID, df.essays$Intervention_number, df.essays$Intervention_Date))),]
+
+#no dupes
+length(unique(paste(filedetails$id, filedetails$int, filedetails$date)))
+
+#the above are valid joins. Make sure dates are equal formatting
+df.essays$Intervention_Date <- as.Date(as.character(df.essays$Intervention_Date), 
+                                       format='%m/%d/%Y')
+df.essays$Intervention_Date <- format(df.essays$Intervention_Date,
+                                      "%m-%d-%Y")
+df.essays$join.col <- paste(df.essays$ID, df.essays$Intervention_number, 
+                            df.essays$Intervention_Date)
+filedetails$join.col <- paste(filedetails$id, filedetails$int, filedetails$date)
+
+test<-left_join(df.essays, filedetails[,c('annot', 'corrected', 'join.col')])
+
+#####check this for consistency!!!!!! Look to see if anything has been mucked up!
+
+length(unique(paste(df.essays$ID, df.essays$Intervention_number, df.essays$Intervention_Date)))
+
+
+
