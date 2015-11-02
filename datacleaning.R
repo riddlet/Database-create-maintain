@@ -308,6 +308,18 @@ indicators <- indicators[which(!(indicators[,1] %in% indicators[,2])),]
 levels(df.prompts$Essay.Prompt)[indicators[,2]] <- levels(df.prompts$Essay.Prompt)[indicators[,1]]
 
 write.table(df.prompts , 'prompts10.6.15.csv', sep='|', row.names=F, quote=F)
+
+df <- read.csv('../Data/3 CSV Files/prompts10.8.15.csv', sep='|', quote="")
+
+df.temp <- filter(df, Study == 'Connecticut')
+df.temp <- df.temp[which(df.temp$Essay.Prompt!=''),]
+df.temp$Essay.Prompt <- droplevels(df.temp$Essay.Prompt)
+length(unique(df.temp$Essay.Prompt))
+df.temp$Condition <- droplevels(df.temp$Condition)
+levels(df.temp$Condition) <- c(rep('Treat', 2), rep('Control', 8), 
+                            rep('Treat', 7))
+C <- temp[which(temp$Condition == 'Control'),]
+Tr <- temp[which(temp$Condition == 'Treat'),]
 ######## Appending annotated essays
 
 #function returns paths to all text files in the directory
@@ -463,12 +475,13 @@ df.essays <- df.essays[which(df.essays$Essay!=''),]
 write.table(df.essays, 'essays10.15.15.csv', sep='|', row.names=F, quote=F)
 
 ############################# write files for annotating #######################
-df.annotate <- read.csv('../Data/tobeannotated.csv', sep='|', quote="")
+df.annotate <- read.csv('../Data/3 CSV Files/essays10.26.15.csv', sep='|', quote="")
 
 df.annotate$Intervention_Date <- as.Date(df.annotate$Intervention_Date, 
                                          format='%m/%d/%Y')
 df.annotate$Intervention_Date <- format(df.annotate$Intervention_Date, 
                                         "%m-%d-%Y")
+levels(df.annotate$Condition)[c(16, 17)] <- c('c (got t 9-20-04)', 'c.t')
 
 filename <- paste(df.annotate$ID, 
                   df.annotate$Condition,
@@ -507,6 +520,11 @@ for(i in 1:length(filedetails$filename)){
 
 filedetails$annot <- cleanannotation(filedetails$essay)
 filedetails$corrected <- correctessay(filedetails$annot)
+
+filedetails <- filedetails[which(filedetails$corrected!=''),]
+filedetails <- filedetails[which(filedetails$corrected!='N/A'),]
+
+write.table(filedetails, 'toappend.csv', sep='|', row.names=F, quote=F)
 
 df.essays <- read.csv('essays10.15.15.csv', sep='|', quote="")
 head(df.essays)

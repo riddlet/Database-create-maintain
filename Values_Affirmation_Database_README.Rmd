@@ -31,8 +31,9 @@ The variables for each file are listed below.
 
 ##Essays
 ```{r, echo=FALSE}
-df.essays <- read.csv('../Data/3 CSV Files/essays10.12.15.csv', sep='|', quote="")
+df.essays <- read.csv('../Data/3 CSV Files/essays11.02.15.csv', sep='|', quote="")
 df.essays <- df.essays[which(df.essays$Essay != ''),]
+df.essays <- df.essays[which(df.essays$Essay != 'N/A'),]
 names(df.essays)
 ```
 ##Participants
@@ -45,11 +46,11 @@ names(df.demographics)[-6:-8]
 df.outcomes <- read.csv('../Data/3 CSV Files/grades10.5.15.csv')
 df.outcomes <- df.outcomes[which(df.outcomes$Grade != ''),]
 df.outcomes <- df.outcomes[,-1]
-names(df.outcomes)[-1]
+names(df.outcomes)
 ```
 ##Prompts
 ```{r, echo=F, message=FALSE}
-df.prompts <- read.csv('../Data/3 CSV Files/prompts10.8.15.csv', sep='|', quote="")
+df.prompts <- read.csv('../Data/3 CSV Files/prompts10.26.15.csv', sep='|', quote="")
 df.prompts <- df.prompts[,-1]
 names(df.prompts)
 ```
@@ -86,17 +87,119 @@ temp$Cohort <- droplevels(temp$Cohort)
 table(temp$Cohort)
 ```
 
-- **Number of interventions per Cohort - Windsor data only**
+- **Number of essays per interventions per Cohort - Windsor data only**
 ```{r, echo=F, message=FALSE}
 table(temp$Intervention_number, temp$Cohort)
 ```
 
-- **Intervention Dates per Cohort - Windsor data only**
+- **Number of essays per intervention date per Cohort - Windsor data only**
 ```{r, echo=F, message=FALSE}
 temp$Intervention_Date <- droplevels(temp$Intervention_Date)
 temp$Intervention_Date <- as.Date(as.character(temp$Intervention_Date), format="%m/%d/%Y")
 temp <- arrange(temp, Intervention_Date)
 table(temp$Intervention_Date, temp$Cohort)
+```
+
+### Annotations
+We have manually annotated essays from the connecticut cohorts for grammatical and spelling errors. After several false starts, we settled on a scheme in which research assistants attempted to convert all writing into sentences that were grammatically well-formed. They accomplished this by indicating through three types of edits - additions, deletions, and substitutions. For each essay, they marked the spot of the edit through the use of symbols for each of the edit type. Additions were marked with `$` symbols, deletions with `^` symbols, and substitutions with `@` symbols, In addition, for additions and substitutions, they provided the new or replacement text. 
+
+For instance, here is an entry that required two substitutions:
+
+```{r, echo=F, message=FALSE, results='asis'}
+writeLines(paste('**', 'Essay', '**\n', sep=''))
+```
+```{r, echo=F, message=FALSE}
+writeLines(strwrap(temp$Essay[1]))
+```
+
+In the `annotated` column of the same table, we can find where the changes were marked, as well as what the 'fix' is.
+
+```{r, echo=F, message=FALSE}
+writeLines(strwrap(temp$annotated[1]))
+```
+
+Finally, the `corrected` column displays the essay with the suggested edits implemented.
+
+```{r, echo=F, message=FALSE}
+writeLines(strwrap(temp$corrected[1]))
+```
+
+An example of an essay that includes deletions and substitutions:
+
+```{r, echo=F, message=FALSE, results='asis'}
+writeLines(paste('**', 'Essay', '**\n', sep=''))
+```
+```{r, echo=F, message=FALSE}
+writeLines(strwrap(temp$Essay[3]))
+```
+```{r, echo=F, message=FALSE, results='asis'}
+writeLines(paste('**', 'annotated', '**\n', sep=''))
+```
+```{r, echo=F, message=FALSE}
+writeLines(strwrap(temp$annotated[3]))
+```
+```{r, echo=F, message=FALSE, results='asis'}
+writeLines(paste('**', 'corrected', '**\n', sep=''))
+```
+```{r, echo=F, message=FALSE}
+writeLines(strwrap(temp$corrected[3]))
+
+```
+
+And an example essay with all three edit types:
+
+```{r, echo=F, message=FALSE, results='asis'}
+writeLines(paste('**', 'Essay', '**\n', sep=''))
+```
+```{r, echo=F, message=FALSE}
+writeLines(strwrap(temp$Essay[4]))
+```
+```{r, echo=F, message=FALSE, results='asis'}
+writeLines(paste('**', 'annotated', '**\n', sep=''))
+```
+```{r, echo=F, message=FALSE}
+writeLines(strwrap(temp$annotated[4]))
+```
+```{r, echo=F, message=FALSE, results='asis'}
+writeLines(paste('**', 'corrected', '**\n', sep=''))
+```
+```{r, echo=F, message=FALSE}
+writeLines(strwrap(temp$corrected[4]))
+
+```
+
+Typically, the addition, deletion, or substitution referred to only the previous word. However, on occasion it was necessary to perform an edit on a group of words. In these instances, the group of words which the edit refers to are grouped by curly brackets (i.e. `{}`). Here is an example:
+
+```{r, echo=F, message=FALSE, results='asis'}
+writeLines(paste('**', 'Essay', '**\n', sep=''))
+```
+```{r, echo=F, message=FALSE}
+writeLines(strwrap(temp$Essay[5]))
+```
+```{r, echo=F, message=FALSE, results='asis'}
+writeLines(paste('**', 'annotated', '**\n', sep=''))
+```
+```{r, echo=F, message=FALSE}
+writeLines(strwrap(temp$annotated[5]))
+```
+```{r, echo=F, message=FALSE, results='asis'}
+writeLines(paste('**', 'corrected', '**\n', sep=''))
+```
+```{r, echo=F, message=FALSE}
+writeLines(strwrap(temp$corrected[5]))
+
+```
+
+It should be apparent from even these few examples that the edits are not always perfect. However, it is also equally apparent that, on the whole, they dramatically improve the grammar and spelling for each essay. At this time, we have performed annotations for the windsor data only. We have nearly finished with this task. 
+
+- **Proportion of essays annotated for correction - Windsor data only**
+```{r, echo=F, message=FALSE}
+missed <- table(temp$annotated=='')[1] + 
+  table(temp$annotated=='N/A')[1] +  
+  table(is.na(temp$annotated))[2]
+
+done <- length(temp$Essay) - missed
+done/length(temp$Essay)
 ```
 
 ##Demographics
@@ -135,7 +238,7 @@ table(df.demographics$Study, df.demographics$Gender)
 length(df.outcomes$ID)
 ```
 
-- **Types of outcomes per study**
+- **Number of outcome type per study**
 ```{r, echo=F, message=FALSE}
 df.outcomes$Study <- droplevels(df.outcomes$Study)
 table(df.outcomes$Grade_type, df.outcomes$Study)
@@ -156,6 +259,14 @@ table(temp$est_Grade_date, temp$Grade_type)
 ##Prompts
 This file is still being created. The windsor data is finished, so we will limit our description to these data
 
+- **Number of unique values combinations**
+```{r, echo=F, message=FALSE}
+temp <- filter(df.prompts, Study == 'Connecticut')
+temp <- temp[which(temp$Values!=''),]
+temp$Values <- droplevels(temp$Values)
+length(unique(temp$Values))
+```
+
 - **Number of different prompts**
 ```{r, echo=F, message=FALSE}
 temp <- filter(df.prompts, Study == 'Connecticut')
@@ -165,58 +276,86 @@ num.prompts <- length(unique(temp$Essay.Prompt))
 num.prompts
 ```
 
-- **Number of unique values combinations**
-```{r, echo=F, message=FALSE}
-temp <- filter(df.prompts, Study == 'Connecticut')
-temp <- temp[which(temp$Essay.Prompt!=''),]
-temp$Essay.Prompt <- droplevels(temp$Essay.Prompt)
-length(unique(temp$Essay.Prompt))
-
-```
-
 - **Prompt type per Cohort**
-```{r, echo=F, message=FALSE}
+```{r, echo=F, message=FALSE, warning=F}
 temp$Condition <- droplevels(temp$Condition)
-levels(temp$Condition) <- c(rep('Other', 3), rep('Control', 7), 
+levels(temp$Condition) <- c(rep('Treat', 2), rep('Control', 8), 
                             rep('Treat', 7))
-temp$prompt.factor <- factor(temp$Essay.Prompt, levels=letters)
-#lvls <- c(LETTERS, paste('A', LETTERS, sep=''))
-#temp$prompt.factor <- factor(temp$Essay.Prompt, labels=lvls[1:num.prompts])
-#temp$seq <- with(temp, ave(prompt.factor, Intervention_number, Cohort, FUN=seq_along))
+C <- temp[which(temp$Condition == 'Control'),]
+Tr <- temp[which(temp$Condition == 'Treat'),]
+C$prompt.factor <- factor(droplevels(C$Essay.Prompt), 
+                          labels=paste('C', 1:19, sep='-'))
+Tr$prompt.factor <- factor(droplevels(Tr$Essay.Prompt),
+                           labels=paste('T', 1:20, sep='-'))
+temp <- rbind(C, Tr)
+C <- reshape(C[,c(1,5,8)], timevar = "Cohort", idvar = "Intervention_number",
+             direction = "wide")
+Tr <- reshape(Tr[,c(1,5,8)], timevar = "Cohort", idvar = "Intervention_number",
+             direction = "wide")
 
-#prompt.wide <- dcast(temp, Intervention_number~Cohort, value.var = 'prompt.factor')
+names(C)[2:9] <- paste('Cohort', 1:8) 
+names(Tr)[2:9] <- paste('Cohort', 1:8) 
 
-#temp2 <- temp[which(Condition=='Control'),]
+C
+Tr
 
-temp2 <- temp %>%
-  group_by(Cohort, Intervention_number) %>%
-  distinct(Essay.Prompt) %>%
-  select(Intervention_number, Condition, Intervention_Date, Study, Cohort, Essay.Prompt)
 ```
+
+The reader may notice that the treatments for Cohorts 7 and 8 do not entirely match those listed below. For Cohort 7, Intervention 2 and Cohort 8, Intervention 1, subjects were randomly assigned to two different types of prompts - some were about politicians and others were about friends and family.
 
 ```{r, echo=F, message=FALSE, results='asis'}
-  writeLines(paste('###', temp2$Cohort[1]))
-  #writeLines('####################\n')
-  writeLines(paste('#####', 'Intervention Number ', temp2$Intervention_number[1]))
-  #writeLines('^^^^^^^^^^^^^^^^^^\n')
-  writeLines(paste('######','Condition', temp2$Condition[1]))
-  #writeLines('~~~~~~~~~~~~~~~~~~~\n')
-  writeLines(strwrap(temp2$Essay.Prompt[1]))
-  writeLines('\n\n')
-for(i in 2:length(temp2$Essay.Prompt)){
-  if(temp2$Cohort[i] != temp2$Cohort[i-1]){
-    writeLines(paste('###', temp2$Cohort[i], '  '))
-    #writeLines('####################\n')
-  }
-  if(temp2$Intervention_number[i] != temp2$Intervention_number[i-1]){
-    writeLines('\n-----\n')
-    writeLines(paste('####', 'Intervention Number ', temp2$Intervention_number[i], '  '))
-  }
-  writeLines(paste('######', 'Condition', temp2$Condition[i], '  '))
+  temp <- temp[order(temp$prompt.factor, temp$Cohort, temp$Intervention_number),
+               c('Intervention_number', 'Cohort', 'Essay.Prompt', 
+                 'prompt.factor')]
+  temp <- unique(temp)
   
-  writeLines(strwrap(temp2$Essay.Prompt[i]))
+  writeLines(paste('###', temp$prompt.factor[1], '\n', sep=''))
+  writeLines(strwrap(temp$Essay.Prompt[1]))
   writeLines('\n')
+  writeLines(paste(temp$Cohort[1],'\n', sep=''))
+  writeLines(strwrap('- Intervention Number(s): '))
+  writeLines(strwrap(temp$Intervention_number[1]))
+  
+for(i in 2:length(temp$Essay.Prompt)){
+  if(temp$Essay.Prompt[i-1] != temp$Essay.Prompt[i]){
+    writeLines(paste('\n', '###', temp$prompt.factor[i], sep=''))
+    writeLines(strwrap('\n'))
+    writeLines(strwrap(temp$Essay.Prompt[i]))
+    writeLines('\n')
+    writeLines(strwrap('\n'))
+    writeLines(paste(temp$Cohort[i], '\n', sep=''))
+    writeLines(strwrap('- Intervention Number(s): '))
+    writeLines(strwrap(temp$Intervention_number[i]))
+    }
+  else{
+    if(temp$Cohort[i] != temp$Cohort[i-1]){
+        writeLines(strwrap('\n'))
+        writeLines(paste(temp$Cohort[i], '\n', sep=''))
+        writeLines(strwrap('- Intervention Number(s): '))
+        writeLines(strwrap(temp$Intervention_number[i]))
+    }
+    if(temp$Cohort[i] == temp$Cohort[i-1]){
+      writeLines(paste(', ', temp$Intervention_number[i], sep=''))
+    }
+  }
+
 }
+
+#  writeLines((paste('###', 'Prompt' temp$prompt.factor[1])))
+#  WriteLines(paste(Cohort[1], Intervention_number[1]))
+#  if(temp2$Cohort[i] != temp2$Cohort[i-1]){
+#    writeLines(paste('###', temp2$Cohort[i], '  '))
+    #writeLines('####################\n')
+#  }
+ # if(temp2$Intervention_number[i] != temp2$Intervention_number[i-1]){
+#    writeLines('\n-----\n')
+#    writeLines(paste('####', 'Intervention Number ', temp2$Intervention_number[i], '  '))
+#  }
+#  writeLines(paste('######', 'Condition', temp2$Condition[i], '  '))
+#  
+#  writeLines(strwrap(temp2$Essay.Prompt[i]))
+#  writeLines('\n')
+#}
 
 ```
 
@@ -234,21 +373,10 @@ This refers to data from Silverman, Logel, & Cohen (2013, *JESP*). We obtained s
 These data (Salles, Cohen & Mueller, 2012 *Journal of the American College of Surgeons*) are largely not usable at the moment. The file we were sent is missing labels for the columns, so aside from some obvious ones (e.g. essays), it isn't clear which variable each column contains. Additionally, much of the data is missing and the essays are cut off in the middle of sentences.
 
 ## Prompts
-We have finished including prompt information for the Windsor data and are currently in the process of appending the same information for the other samples.
+We will eventually add in the prompt text for all additional studies included
 
 ## Values selected
 We are just beginning to add a variable that will indicate which value the writer selected.
-
-## Annotated & Corrected essays
-We will also soon add a second version of each essay that has been annotated for correct spelling and grammar. In order to best preserve the integrity of what the writer wanted to communicate, we used a limited approach, only annotating for additions (marked with `$$`), deletions (marked with `^^`), and substitutions (marked with `@@`) of words to create more grammatically well-formed sentences. Here is an example of an annotated essay:
-
-**Original:**  
-`This morning I had no breakfast and I got to school by car.  `
-
-**Annotated:**  
-`This morning $,$ I had $did not have$ no ^no^ breakfast $,$ and I got to school by car.  `
-
-You can see that the annotated sentence not only introduces changes to create a more grammatically well-formed sentence, but *also* allows us to investigate the types of changes made.
 
 #Conclusions
 This database provides a foundation on which a wide variety of analyses can be built. It is straightforward to use, simple to extend, and can be easily shared. While the data are already largely de-identified, they can be completely de-identified by simply not sharing the demographics file. 
