@@ -475,13 +475,16 @@ df.essays <- df.essays[which(df.essays$Essay!=''),]
 write.table(df.essays, 'essays10.15.15.csv', sep='|', row.names=F, quote=F)
 
 ############################# write files for annotating #######################
-df.annotate <- read.csv('../Data/3 CSV Files/essays10.26.15.csv', sep='|', quote="")
+df.annotate <- read.csv('../Data/3 CSV Files/essays11.12.15.csv', sep='|', quote="")
 
 df.annotate$Intervention_Date <- as.Date(df.annotate$Intervention_Date, 
                                          format='%m/%d/%Y')
 df.annotate$Intervention_Date <- format(df.annotate$Intervention_Date, 
                                         "%m-%d-%Y")
-levels(df.annotate$Condition)[c(16, 17)] <- c('c (got t 9-20-04)', 'c.t')
+levels(df.annotate$Condition)[c(16)] <- c('c.t')
+
+df.annotate <- df.annotate[which(df.annotate$Study=='Connecticut'),]
+df.annotate <- df.annotate[which(is.na(df.annotate$corrected)),]
 
 filename <- paste(df.annotate$ID, 
                   df.annotate$Condition,
@@ -493,8 +496,11 @@ for(i in 1:length(df.annotate$Essay)) {
   write(text, file=paste('../Data/ann/',filename[i], '.txt', sep=''))
 }
 
+write.table(df.annotate, '../Data/ann/to_annotate.csv', sep='|', row.names=F, 
+            quote=F)
+
 ############################# get skipped files ################################
-path <- '../Data/ann/Annot Done/'
+path <- '../Data/ann/completed/'
 
 ess.file <- list.files(path) #get the file names
 file.comp <- str_split(ess.file, pattern = '_') #split filename into id, condition, date, and intervention number
