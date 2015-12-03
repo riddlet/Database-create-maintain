@@ -475,7 +475,7 @@ df.essays <- df.essays[which(df.essays$Essay!=''),]
 write.table(df.essays, 'essays10.15.15.csv', sep='|', row.names=F, quote=F)
 
 ############################# write files for annotating #######################
-df.annotate <- read.csv('../Data/3 CSV Files/essays11.12.15.csv', sep='|', quote="")
+df.annotate <- read.csv('../Data/essays11.13.15.csv', sep='|', quote="")
 
 df.annotate$Intervention_Date <- as.Date(df.annotate$Intervention_Date, 
                                          format='%m/%d/%Y')
@@ -500,7 +500,7 @@ write.table(df.annotate, '../Data/ann/to_annotate.csv', sep='|', row.names=F,
             quote=F)
 
 ############################# get skipped files ################################
-path <- '../Data/ann/completed/'
+path <- '../../../Desktop/Ann/Last_80/'
 
 ess.file <- list.files(path) #get the file names
 file.comp <- str_split(ess.file, pattern = '_') #split filename into id, condition, date, and intervention number
@@ -531,6 +531,15 @@ filedetails <- filedetails[which(filedetails$corrected!=''),]
 filedetails <- filedetails[which(filedetails$corrected!='N/A'),]
 
 write.table(filedetails, 'toappend.csv', sep='|', row.names=F, quote=F)
+incompletes <- read.csv('toappend.csv', sep="|", quote="")
+
+names(filedetails)[c(2,5)] <- c("ID", "Intervention_number")
+incompletes$ID <- as.character(incompletes$ID)
+incompletes$Intervention_number <- as.character(incompletes$Intervention_number)
+df <- left_join(incompletes, filedetails, by=c("ID", "Intervention_number"))
+df <- df[,c(1:7, 14, 15)]
+write.table(df, 'toappend.csv', sep='|', row.names=F, quote=F)
+
 
 df.essays <- read.csv('essays10.15.15.csv', sep='|', quote="")
 head(df.essays)
@@ -556,5 +565,103 @@ test<-left_join(df.essays, filedetails[,c('annot', 'corrected', 'join.col')])
 
 length(unique(paste(df.essays$ID, df.essays$Intervention_number, df.essays$Intervention_Date)))
 
+########## This is where I extract data from the original connecticut files. ##########
+
+library(reshape2)
+library(stringr)
+
+###Coh1 - 7th grade
+df.c1.7<-read.csv('../Data/cohort1_grade7.csv')
+gradecols <- c(grep('socstud', names(df.c1.7)),
+               grep('engl[1-4](?!b)', perl=T, names(df.c1.7)),
+               grep('math[1-4]$', names(df.c1.7)),
+               grep('prealg', names(df.c1.7)),
+               grep('science', names(df.c1.7)))
+
+#to long
+df.7.l <- melt(df.c1.7, id.vars='id', measure.vars=names(df.c1.7)[gradecols])
+
+#split into class and quarter convert to standard data format
+df.7.l$quarter <- substr(sub('[a-z]*([1-4])', '\\1', df.7.l$variable), 1,1)
+df.7.l$quarter <- as.numeric(df.7.l$quarter)
+df.7.l$variable <- substr(df.7.l$variable, 1, 4)
+df.7.l$variable <- factor(df.7.l$variable, 
+                          labels = c('English', 'Math', 'Math', 
+                                     'Science','Social Studies'))
+df.7.l$variable <- droplevels((df.7.l$variable))
+df.7.l$value <- factor(df.7.l$value)
+df.7.l$numericgrade <- factor(df.7.l$value, 
+                              labels=c('', '', '4.0', '3.7', '4.3', '3.0', 
+                                       '2.7', '3.3', '2.0', '1.7', '2.3',
+                                       '1.0', '.7', '1.3', '0', '', ''))
+df.7.l$numericgrade <- as.numeric(as.character(df.7.l$numericgrade))
 
 
+###Coh1 - 8th grade
+df.c1.8 <- read.csv('../Data/cohort1_grade8.csv')
+gradecols <- c(grep('ssq[1-4]$', names(df.c1.8)),
+               grep('englq[1-4]$', names(df.c1.8)),
+               grep('mathq[1-4]$', names(df.c1.8)),
+               grep('preq[1-4]$', names(df.c1.8)),
+               grep('prealgq[1-4]$', names(df.c1.8)),
+               grep('^algq[1-4]$', names(df.c1.8)),
+               grep('sciq[1-4]$', names(df.c1.8)),
+               grep('sciencq[1-4]$', names(df.c1.8)))
+
+#to long
+df.8.l <- melt(df.c1.8, id.vars='id', measure.vars=names(df.c1.8)[gradecols])
+
+#split into class and quarter convert to standard data format
+df.8.l$quarter <- str_sub(df.8.l$variable, -1)
+df.8.l$quarter <- as.numeric(df.8.l$quarter) + 4
+df.8.l$variable <- substr(df.8.l$variable, 1, 2)
+df.8.l$variable <- factor(df.8.l$variable, 
+                          labels = c('Math', 'English', 'Math', 
+                                     'Math','Science', 'Social Studies'))
+df.8.l$variable <- droplevels((df.8.l$variable))
+df.8.l$value <- factor(df.8.l$value)
+df.8.l$numericgrade <- factor(df.8.l$value, 
+                              labels=c('', '4.0', '3.7', '4.3', '3.0', '2.7', 
+                                       '3.3', '2.0', '1.7', '2.3', '1.0', 
+                                       '.7', '1.3', '0', '', '', ''))
+df.8.l$numericgrade <- as.numeric(as.character(df.8.l$numericgrade))
+
+df.c1 <- rbind(df.7.l, df.8.l)
+df.c1$Study <- 'Connecticut'
+write.csv(df.c1, 'cohort1_long.csv')
+
+###Coh 2
+library(foreign)
+df.c2 <- read.spss('../Data/Cohort 2 Student Records 03-04, 04-05, 05-06.sav', 
+          to.data.frame = T)
+write.csv(df.c2, 'cohort2.csv')
+gradecols <- c(grep('(ssq[1-4]$)|(ssq[1-4]_8$)', names(df.c2)),
+               grep('(englq[1-4](a?)$)|(engq[1-4]_8$)', names(df.c2), perl=T),
+               grep('(mathq[1-4]$)|(matq[1-4]_8$)', names(df.c2)),
+               grep('(pre(alg)?q[1-4]$)|(pre(al(g)?)?q[1-4]_8$)', names(df.c2)),
+               grep('^algq[1-4]_8$', names(df.c2)),
+               grep('(sci(enc)?q[1-4]$)|(sci(enc)?q[1-4]_8$)', names(df.c2)))
+
+#to long
+df.c2.l <- melt(df.c2, id.vars='id', measure.vars=names(df.c2)[gradecols])
+
+#split into class and quarter convert to standard data format
+df.c2.l$yr <- 7
+df.c2.l$yr[which(grepl('_8', df.c2.l$variable))] <- 8
+df.c2.l$quarter <- str_extract(df.c2.l$variable, '\\d')
+df.c2.l$quarter <- as.numeric(df.c2.l$quarter)
+df.c2.l$quarter[which(df.c2.l$yr == 8)] <- df.c2.l$quarter+4
+df.c2.l$variable <- substr(df.c2.l$variable, 1, 2)
+df.c2.l$variable <- factor(df.c2.l$variable, 
+                          labels = c('Math', 'English', 'Math', 
+                                     'Math','Science', 'Social Studies'))
+df.c2.l$variable <- droplevels((df.c2.l$variable))
+df.c2.l$value <- factor(df.c2.l$value)
+df.c2.l$numericgrade <- factor(df.c2.l$value, 
+                              labels=c('', '4.0', '3.7', '4.3', '3.0', '2.7', 
+                                       '3.3', '2.0', '1.7', '2.3', '1.0', 
+                                       '.7', '1.3', '0', '', '', '', ''))
+df.c2.l$numericgrade <- as.numeric(as.character(df.c2.l$numericgrade))
+df.c2.l$Study <- 'Connecticut'
+names(df.c2.l)[1] <- 'ID'
+write.csv(df.c2.l[,c(1,2,3,5,6,7)], 'cohort2_long.csv', row.names = F)
