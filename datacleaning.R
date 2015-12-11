@@ -675,9 +675,9 @@ df.c3 <- read.csv('../Data/cohort3.csv')
 gradecols <- c(grep('(ssq[1-4]_7$)|(ssq[1-4]_8$)', names(df.c3)),
                grep('(eng(l?)q[1-4](a?)_7$)|(engq[1-4]_8$)', names(df.c3), perl=T),
                grep('(mat(h?)q[1-4]_7$)|(mathq[1-4]_8$)', names(df.c3)),
-               grep('(pre(al(g?))?q[1-4]$)|(pre(al(g)?)?q[1-4]_8$)', names(df.c3)),
+               grep('(pre(al(g?))?q[1-4]_7$)|(pre(al(g)?)?q[1-4]_8$)', names(df.c3)),
                grep('^algq[1-4]_8$', names(df.c3)),
-               grep('(sci(enc)?q[1-4]$)|(sci(enc)?q[1-4]_8$)', names(df.c3)))
+               grep('(sci(enc)?q[1-4]_7$)|(sci(enc)?q[1-4]_8$)', names(df.c3)))
 
 #to long
 df.c3.l <- melt(df.c3, id.vars='id', measure.vars=names(df.c3)[gradecols])
