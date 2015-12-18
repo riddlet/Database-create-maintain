@@ -663,8 +663,9 @@ df.8.l$numericgrade <- factor(df.8.l$value,
 df.8.l$numericgrade <- as.numeric(as.character(df.8.l$numericgrade))
 
 df.c1 <- rbind(df.6.l, df.7.l, df.8.l)
+names(df.c1)[1] <- 'ID'
 df.c1$Study <- 'Connecticut'
-write.csv(df.c1, 'cohort1_long.csv')
+write.csv(df.c1, '../Data/cohort1_long.csv', row.names = F)
 
 ###Coh 2
 library(foreign)
@@ -734,7 +735,7 @@ df.c2.l$numericgrade <- as.numeric(as.character(df.c2.l$numericgrade))
 df.c2.l$Study <- 'Connecticut'
 df.c2.l <- rbind(df.c2.l, df.c2.6.l)
 names(df.c2.l)[1] <- 'ID'
-write.csv(df.c2.l[,c(1,2,3,5,6,7)], 'cohort2_long.csv', row.names = F)
+write.csv(df.c2.l[,c(1,2,3,5,6,7)], '../Data/cohort2_long.csv', row.names = F)
 
 ###Coh 3
 c3 <- read.spss('../Data/Cohort 3 Student Records 04-05, 05-06, 06-07.sav',
@@ -751,7 +752,8 @@ gradecols <- c(grep('artq[1-4]$', names(df.c3)),
                     names(df.c3), perl=T),
                grep('(mat(h?)q[1-4]$)|(mat(h?)q[1-4]_7$)|(mathq[1-4]_8$)', 
                     names(df.c3)),
-               grep('(pre(al(g?))?q[1-4]_7$)|(pre(al(g)?)?q[1-4]_8$)', names(df.c3)),
+               grep('(pre(al(g?))?q[1-4]_7$)|(pre(al(g)?)?q[1-4]_8$)', 
+                    names(df.c3)),
                grep('^algq[1-4]_8$', names(df.c3)),
                grep('(sci(enc)?q[1-4]$)|
                       (sci(enc)?q[1-4]_7$)|
@@ -765,8 +767,10 @@ df.c3.l$yr[which(grepl('_7', df.c3.l$variable))] <- 7
 df.c3.l$yr[which(grepl('_8', df.c3.l$variable))] <- 8
 df.c3.l$quarter <- str_extract(df.c3.l$variable, '\\d')
 df.c3.l$quarter <- as.numeric(df.c3.l$quarter)
-df.c3.l$quarter[which(df.c3.l$yr == 6)] <- df.c3.l$quarter-5
-df.c3.l$quarter[which(df.c3.l$yr == 8)] <- df.c3.l$quarter+4
+df.c3.l$quarter[which(df.c3.l$yr == 6)] <- 
+  df.c3.l$quarter[which(df.c3.l$yr == 6)]-5
+df.c3.l$quarter[which(df.c3.l$yr == 8)] <- 
+  df.c3.l$quarter[which(df.c3.l$yr == 8)]+4
 df.c3.l$variable <- substr(df.c3.l$variable, 1, 2)
 df.c3.l$variable <- factor(df.c3.l$variable, 
                            labels = c('Math', 'Special', 'English', 'Math', 
@@ -782,3 +786,50 @@ df.c3.l$numericgrade <- as.numeric(as.character(df.c3.l$numericgrade))
 df.c3.l$Study <- 'Connecticut'
 names(df.c3.l)[1] <- 'ID'
 write.csv(df.c3.l[,c(1,2,3,5,6,7)], '../Data/cohort3_long.csv', row.names = F)
+
+###Coh 4
+c4 <- read.spss('../Data/Cohort 4 Student Records 05-06, 06-07, 07-08 12.1.09.sav',
+                to.data.frame = T)
+write.csv(c4, '../Data/cohort4.csv', row.names = F)
+
+df.c4 <- read.csv('../Data/cohort4.csv')
+gradecols <- c(grep('artq[1-4]$', names(df.c4)),
+               grep('peq[1-4]$', names(df.c4)),
+               grep('readq[1-4]$', names(df.c4)),
+               grep('spe[1-4?]q[1-4]$', names(df.c4)),
+               grep('(ssq[1-4]$)|(ssq[1-4]_7$)|(ssq[1-4]_8$)', names(df.c4)),
+               grep('(eng(l?)q[1-4]$)|(eng(l?)q[1-4](a?)_7$)|(engq[1-4]_8$)', 
+                    names(df.c4), perl=T),
+               grep('(mat(h?)q[1-4]$)|(mat(h?)q[1-4]_7$)|(mathq[1-4]_8$)', 
+                    names(df.c4)),
+               grep('(pre(al(g?))?q[1-4]_7$)|(pre(al(g)?)?q[1-4]_8$)', names(df.c4)),
+               grep('^algq[1-4]_8$', names(df.c4)),
+               grep('sci(enc)?q[1-4]$|sciq[1-4]_7$|sci(enc)?q[1-4]_8$', 
+                    names(df.c4)))
+
+#to long
+df.c4.l <- melt(df.c4, id.vars='id', measure.vars=names(df.c4)[gradecols])
+df.c4.l$yr <- 6
+df.c4.l$yr[which(grepl('_7', df.c4.l$variable))] <- 7
+df.c4.l$yr[which(grepl('_8', df.c4.l$variable))] <- 8
+df.c4.l$quarter <- str_extract(df.c4.l$variable, '\\d')
+df.c4.l$quarter <- as.numeric(df.c4.l$quarter)
+df.c4.l$quarter[which(df.c4.l$yr == 6)] <- 
+  df.c4.l$quarter[which(df.c4.l$yr == 6)]-5
+df.c4.l$quarter[which(df.c4.l$yr == 8)] <- 
+  df.c4.l$quarter[which(df.c4.l$yr == 8)]+4
+df.c4.l$variable <- substr(df.c4.l$variable, 1, 2)
+df.c4.l$variable <- factor(df.c4.l$variable, 
+                           labels = c('Math', 'Special', 'English', 'Math', 
+                                      'Special', 'Math', 'Special', 'Science', 
+                                      'Special', 'Social Studies'))
+df.c4.l$variable <- droplevels((df.c4.l$variable))
+df.c4.l$value <- factor(df.c4.l$value)
+df.c4.l$numericgrade <- factor(df.c4.l$value, 
+                               labels=c('', '4.0', '3.7', '4.3', '3.0', '2.7', 
+                                        '3.3', '2.0', '1.7', '2.3', '1.0', 
+                                        '.7', '1.3', '0', '', '', '', ''))
+df.c4.l$numericgrade <- as.numeric(as.character(df.c4.l$numericgrade))
+df.c4.l$Study <- 'Connecticut'
+names(df.c4.l)[1] <- 'ID'
+write.csv(df.c4.l[,c(1,2,3,5,6,7)], '../Data/cohort4_long.csv', row.names = F)
