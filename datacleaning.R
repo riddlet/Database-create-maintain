@@ -755,9 +755,7 @@ gradecols <- c(grep('artq[1-4]$', names(df.c3)),
                grep('(pre(al(g?))?q[1-4]_7$)|(pre(al(g)?)?q[1-4]_8$)', 
                     names(df.c3)),
                grep('^algq[1-4]_8$', names(df.c3)),
-               grep('(sci(enc)?q[1-4]$)|
-                      (sci(enc)?q[1-4]_7$)|
-                      (sci(enc)?q[1-4]_8$)', 
+               grep('(sci(enc)?q[1-4]$)|(sciq[1-4]_7$)|(sci(enc)?q[1-4]_8$)', 
                     names(df.c3)))
 
 #to long
