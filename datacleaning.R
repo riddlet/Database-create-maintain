@@ -572,7 +572,8 @@ library(stringr)
 library(foreign)
 
 ###Coh1 - 6th grade
-df.c1.6 <- read.spss('../Data/Cohort 1 04-05 CMTs and 6th grade data.sav', to.data.frame=T)
+df.c1.6 <- read.spss('../Data/Cohort 1 04-05 CMTs and 6th grade data.sav', 
+                     to.data.frame=T)
 gradecols <- c(grep('engl03', names(df.c1.6)),
                grep('math03', names(df.c1.6)),
                grep('scienc03', names(df.c1.6)),
@@ -607,6 +608,9 @@ df.6.l$numericgrade <- as.numeric(as.character(df.6.l$numericgrade))
 df.6.l$id <- as.character(df.6.l$id)
 
 ###Coh1 - 7th grade
+df.c1.7 <- read.spss('../Data/Cohort 1 7th grade data 03-04.sav', 
+                     to.data.frame=T)
+write.csv(df.c1.7, '../Data/cohort1_grade7.csv', row.names = F)
 df.c1.7<-read.csv('../Data/cohort1_grade7.csv')
 gradecols <- c(grep('socstud', names(df.c1.7)),
                grep('engl[1-4](?!b)', perl=T, names(df.c1.7)),
@@ -634,6 +638,9 @@ df.7.l$numericgrade <- as.numeric(as.character(df.7.l$numericgrade))
 
 
 ###Coh1 - 8th grade
+df.c1.8 <- read.spss('../Data/Cohort 1 8th grade data 04-05.sav', 
+                     to.data.frame=T)
+write.csv(df.c1.8, '../Data/cohort1_grade8.csv', row.names = F)
 df.c1.8 <- read.csv('../Data/cohort1_grade8.csv')
 gradecols <- c(grep('ssq[1-4]$', names(df.c1.8)),
                grep('englq[1-4]$', names(df.c1.8)),
