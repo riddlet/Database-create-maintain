@@ -669,6 +669,9 @@ df.8.l$numericgrade <- factor(df.8.l$value,
                                        '.7', '1.3', '0', '', '', ''))
 df.8.l$numericgrade <- as.numeric(as.character(df.8.l$numericgrade))
 
+df.6.l$yr <- 6
+df.7.l$yr <- 7
+df.8.l$yr <- 8
 df.c1 <- rbind(df.6.l, df.7.l, df.8.l)
 names(df.c1)[1] <- 'ID'
 df.c1$Study <- 'Connecticut'
@@ -742,7 +745,7 @@ df.c2.l$numericgrade <- as.numeric(as.character(df.c2.l$numericgrade))
 df.c2.l$Study <- 'Connecticut'
 df.c2.l <- rbind(df.c2.l, df.c2.6.l)
 names(df.c2.l)[1] <- 'ID'
-write.csv(df.c2.l[,c(1,2,3,5,6,7)], '../Data/cohort2_long.csv', row.names = F)
+write.csv(df.c2.l, '../Data/cohort2_long.csv', row.names = F)
 
 ###Coh 3
 c3 <- read.spss('../Data/Cohort 3 Student Records 04-05, 05-06, 06-07.sav',
@@ -790,7 +793,7 @@ df.c3.l$numericgrade <- factor(df.c3.l$value,
 df.c3.l$numericgrade <- as.numeric(as.character(df.c3.l$numericgrade))
 df.c3.l$Study <- 'Connecticut'
 names(df.c3.l)[1] <- 'ID'
-write.csv(df.c3.l[,c(1,2,3,5,6,7)], '../Data/cohort3_long.csv', row.names = F)
+write.csv(df.c3.l, '../Data/cohort3_long.csv', row.names = F)
 
 ###Coh 4
 c4 <- read.spss('../Data/Cohort 4 Student Records 05-06, 06-07, 07-08 12.1.09.sav',
@@ -861,11 +864,10 @@ df.c4.pre$numericgrade <- factor(df.c4.pre$value,
                                  labels=c('', '4.0', '3.0', '', '1.0', '2.0'))
 df.c4 <- rbind(df.c4.pre, df.c4.l)
 
-df.c4.l$numericgrade <- as.numeric(as.character(df.c4.l$numericgrade))
-df.c4.l$Study <- 'Connecticut'
-names(df.c4.l)[1] <- 'ID'
-write.csv(df.c4.l[,c(1,2,3,5,6,7)], '../Data/cohort4_long.csv', row.names = F)
-
+df.c4$numericgrade <- as.numeric(as.character(df.c4$numericgrade))
+df.c4$Study <- 'Connecticut'
+names(df.c4)[1] <- 'ID'
+write.csv(df.c4, '../Data/cohort4_long.csv', row.names = F)
 
 
 ###Coh 5
@@ -939,5 +941,5 @@ df.c5 <- rbind(df.c5, df.c5.l)
 
 df.c5.l$Study <- 'Connecticut'
 names(df.c5.l)[1] <- 'ID'
-write.csv(df.c5.l[,c(1,2,3,5,6,7)], '../Data/cohort5_long.csv', row.names = F)
+write.csv(df.c5.l, '../Data/cohort5_long.csv', row.names = F)
 
