@@ -921,23 +921,24 @@ gradecols <- c(grep('(langart[2-9])$|(lngart1[0-5])$', names(df.c5)),
                grep('^ss[1-3]$', names(df.c5)),
                grep('science[1-3]$', names(df.c5)))
 
-df.c5 <- melt(df.c5, id.vars='id', 
+df.c5.5 <- melt(df.c5, id.vars='id', 
                   measure.vars=names(df.c5)[gradecols])
-df.c5$value <- df.c5$value <- trimws(df.c5$value)
-df.c5 %<>%
+df.c5.5$value <- df.c5.5$value <- trimws(df.c5.5$value)
+df.c5.5 %<>%
   filter(value!='Y') %>%
   filter(value!='N')
 
-df.c5$yr <- 5
-df.c5$quarter <- -1
-df.c5$variable <- factor(df.c5$variable, 
+df.c5.5$yr <- 5
+df.c5.5$quarter <- -1
+df.c5.5$variable <- factor(df.c5.5$variable, 
                              labels=c(rep('English', 14), rep('Math', 6), 
                                       rep('Social Studies', 3), 
                                       rep('Science', 3)))
-df.c5$variable <- droplevels(df.c5$variable)
-df.c5$numericgrade <- factor(df.c5$value,
+df.c5.5$variable <- droplevels(df.c5.5$variable)
+df.c5.5$numericgrade <- factor(df.c5.5$value,
                                  labels=c('', '4.0', '3.0', '', '1.0', '2.0'))
-df.c5 <- rbind(df.c5, df.c5.l)
+df.c5.5$numericgrade <- as.numeric(as.character(df.c5.5$numericgrade))
+df.c5.l <- rbind(df.c5.5, df.c5.l)
 
 df.c5.l$Study <- 'Connecticut'
 names(df.c5.l)[1] <- 'ID'
